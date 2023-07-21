@@ -23,7 +23,7 @@ To get started with the Summary Maker frontend project, follow these steps:
 1. Clone the repository from GitHub:
 
 ```bash
-git clone <https://github.com/parvej-khan-dev/frontend.git>
+git clone https://github.com/parvej-khan-dev/frontend.git
 cd frontend-summary-maker
 ```
 
