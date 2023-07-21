@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { linkPost } from "../services/lisk-post-services";
 import { useNavigate } from "react-router-dom";
 import { Button, Spinner } from "flowbite-react";
+
 const CreatePost = () => {
   const navigate = useNavigate();
   type LinksArray = string[];
@@ -12,6 +13,7 @@ const CreatePost = () => {
   const [fieldValidations, setFieldValidations] = useState<boolean[]>([true]); // Initialize with true to indicate valid fields
   const maxLinks = 5; // Set the maximum number of input fields allowed
   const [loading, setLoading] = useState(false);
+
   const handleChange = (index: number, value: string) => {
     const updatedLinks: LinksArray = [...addLinks];
     updatedLinks[index] = value;
@@ -23,13 +25,30 @@ const CreatePost = () => {
     setFieldValidations(updatedValidations);
   };
 
-  const handleSumbit = async (paylaod: string[]) => {
-    try {
-      setLoading(true);
-      const res = await linkPost(paylaod);
-      if (res?.status === 201) {
-        toast.success(res.data.message, {
-          position: "top-center",
+  // its send api request for article summarizer when click on submit button
+  const handleSubmit = (paylaod: string[]) => {
+    linkPost(paylaod)
+      .then((res: any) => {
+        setLoading(true);
+        if (res?.status === 201) {
+          // show toast when articles summarizer successfully
+          toast(res?.data?.message, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+          navigate("/");
+        }
+      })
+      .catch((err) => {
+        // show toast when we getting any error during article summarizer api from link
+        toast.error(err.message, {
+          position: "top-right",
           autoClose: 5000,
           hideProgressBar: false,
           closeOnClick: true,
@@ -38,25 +57,13 @@ const CreatePost = () => {
           progress: undefined,
           theme: "light",
         });
-        navigate("/");
-      }
-    } catch (error) {
-      toast.error(error.message, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    } finally {
-      setLoading(false);
-    }
   };
 
-  // add Form Field
+  // add Form Field when click on plus button
   const handleAddLink = () => {
     if (addLinks.length < maxLinks) {
       // Check if the last field is not empty before adding a new field
@@ -77,7 +84,7 @@ const CreatePost = () => {
     }
   };
 
-  // Remove Form Field
+  // Remove Form Field when click on minus button
   const removeHandleLink = (index: number) => {
     setAddLinks((prevLinks) => {
       const updatedLinks = [...prevLinks];
@@ -91,18 +98,19 @@ const CreatePost = () => {
     });
   };
 
-  const canShowAdditionalFields =
-    addLinks.length === 1 || addLinks[addLinks.length - 2].trim() !== "";
-
   return (
     <section>
+      {/* loader that show when we click on submit button */}
       {loading ? (
-        <Button>
-          <Spinner aria-label="Spinner button example" />
-          <span className="pl-3">Loading...</span>
-        </Button>
+        <div className="flex justify-center items-center h-full">
+          <Button>
+            <Spinner aria-label="Spinner button example" />
+            <span className="pl-3">Wait your Article is Summarizing ...</span>
+          </Button>
+        </div>
       ) : (
         <>
+          {/* iterate input field till to max length for now its 5 */}
           {addLinks.map((link, index) => (
             <div className="flex items-center gap-2 mb-2" key={index}>
               <div className="mt-6 w-10/12">
@@ -113,7 +121,10 @@ const CreatePost = () => {
                   handleChange={(e: any) => handleChange(index, e.target.value)}
                 />
               </div>
+              {/*  its check first field show without value and check value of 
+               input field value before insert new field */}
               {index === 0 ? (
+                // add form field button
                 <button
                   type="button"
                   onClick={handleAddLink}
@@ -122,6 +133,7 @@ const CreatePost = () => {
                   <FiPlusCircle size={20} />
                 </button>
               ) : (
+                // remove Form input field Button
                 <button
                   type="button"
                   onClick={() => removeHandleLink(index)}
@@ -132,11 +144,11 @@ const CreatePost = () => {
               )}
             </div>
           ))}
-
+          {/* link submit button  */}
           <button
             className="mt-6 font-inter font-medium bg-[#6469ff] text-white px-4 py-2 rounded-md"
             // disabled={!canShowAdditionalFields}
-            onClick={() => handleSumbit(addLinks)}
+            onClick={() => handleSubmit(addLinks)}
           >
             Submit
           </button>
